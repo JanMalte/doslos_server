@@ -6,6 +6,9 @@ class Word(models.Model):
     value = models.CharField(max_length=1000)
     level = models.ForeignKey('doslos.Level')
 
+    def __str__(self):
+        return self.value
+
     def get_progress_for_user(self, user):
         return WordProgress.objects.get_or_create(user=user, word=self)[0]
 
@@ -28,6 +31,9 @@ class Level(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     parent = models.ForeignKey('doslos.Level', blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
     def get_random_word(self, user):
         raise NotImplementedError('Not implemented')
@@ -66,6 +72,9 @@ class WordProgress(models.Model):
 
 class User(AbstractUser):
     current_level = models.ForeignKey('doslos.Level', default=get_default_level_id)
+
+    def __str__(self):
+        return self.get_full_name()
 
     def get_available_levels(self):
         level = self.current_level
