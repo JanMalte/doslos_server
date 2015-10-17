@@ -10,7 +10,7 @@
     <div class="progress">
         <div class="progress-bar" role="progressbar" aria-valuenow="{{ completed_percentage }}" aria-valuemin="0"
              aria-valuemax="100" style="width: {{ completed_percentage }}%">
-            {{ completed_percentage }}%
+            {{ completed_percentage|floatformat:"0" }}%
         </div>
     </div>
 

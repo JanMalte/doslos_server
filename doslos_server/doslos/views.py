@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
@@ -15,13 +17,15 @@ def questionnaire(request, level_id):
     level = Level.objects.get(pk=level_id)
     word = level.get_random_word(request.user)
     answers = level.get_possible_answers(word, request.user)
+    level_right_answer_counter = request.session.get('level_right_answer_counter', 0)
+    completed_percentage = level_right_answer_counter / settings.DOSLOS_RIGHT_WORDS_PER_LEVEL * 100
     context = {
         'level_id': level_id,
         'level': level,
         'word': word,
         'answers': answers,
         'level_right_answer_counter': request.session.get('level_right_answer_counter', 0),
-        'completed_percentage': request.session.get('level_right_answer_counter', 0) / 10 * 100
+        'completed_percentage': completed_percentage
     }
     return render(request, 'doslos/questionnaire.html', context=context)
 
@@ -39,7 +43,7 @@ def post_questionnaire(request, level_id):
             level_right_answer_counter = 0
             word.reset_right_answer_counter(request.user)
             messages.warning(request, _('The answer was not correct. The correct answer is "%s"') % word.value_de)
-        if level_right_answer_counter >= 10:
+        if level_right_answer_counter >= settings.DOSLOS_RIGHT_WORDS_PER_LEVEL:
             request.user.complete_level(level)
             level_right_answer_counter = 0
             request.session['level_right_answer_counter'] = level_right_answer_counter
