@@ -59,7 +59,8 @@ class Level(models.Model):
 
     def get_possible_answers(self, word, user):
         answers = [word, ]
-        while len(answers) < 4:
+        word_list = set(self.get_word_list(user))
+        while len(answers) < 4 and len(answers) != len(word_list):
             wrong_word = self.get_random_word(user)
             if wrong_word not in answers:
                 answers.append(wrong_word)

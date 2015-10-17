@@ -220,3 +220,15 @@ class GetPossibleAnswersTest(TestCase):
         level.get_word_list = get_word_list
         answers = level.get_possible_answers(word, User())
         self.assertSetEqual(set(get_word_list()), set(answers))
+
+    def test_get_possible_answers_not_enough_words(self):
+        level = G(Level, parent=None)
+        word = G(Word, level=level)
+        word_list = [G(Word, level=level), word]
+
+        def get_word_list(user=None):
+            return word_list
+
+        level.get_word_list = get_word_list
+        answers = level.get_possible_answers(word, User())
+        self.assertSetEqual(set(get_word_list()), set(answers))
