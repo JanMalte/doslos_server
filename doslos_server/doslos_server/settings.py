@@ -16,6 +16,9 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+_ = lambda x: x  # NOQA
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -31,6 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -101,3 +105,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# Custom User model
+AUTH_USER_MODEL = 'doslos.User'
+# END Custom User model
+
+
+# Modeltranslation languages
+LANGUAGES = (
+    ('de', _('German')),
+    ('en', _('English')),
+)
+DEFAULT_LANGUAGE = 'en'
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
+MODELTRANSLATION_AUTO_POPULATE = True
+# END Modeltranslation languages
