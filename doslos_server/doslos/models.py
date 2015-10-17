@@ -36,6 +36,10 @@ class Level(models.Model):
         raise NotImplementedError('Not implemented')
 
 
+def get_default_level_id():
+    return Level.objects.get_or_create(parent=None)[0].pk
+
+
 class Category(models.Model):
     name = models.CharField(max_length=255)
     probability = models.IntegerField(default=0)
@@ -46,10 +50,14 @@ class Category(models.Model):
         return self.name
 
 
+def get_default_category_id():
+    return Category.objects.get_or_create(parent=None)[0].pk
+
+
 class WordProgress(models.Model):
     user = models.ForeignKey('doslos.User')
     word = models.ForeignKey('doslos.Word', related_name='progress')
-    category = models.ForeignKey('doslos.Category', default=lambda: Category.objects.get_or_create(parent=None)[0])
+    category = models.ForeignKey('doslos.Category', default=get_default_category_id)
     right_answer_counter = models.IntegerField(default=0)
 
     class Meta:
@@ -57,7 +65,7 @@ class WordProgress(models.Model):
 
 
 class User(AbstractUser):
-    current_level = models.ForeignKey('doslos.Level', default=lambda: Level.objects.get_or_create(parent=None)[0])
+    current_level = models.ForeignKey('doslos.Level', default=get_default_level_id)
 
     def get_available_levels(self):
         level = self.current_level
