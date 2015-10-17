@@ -57,10 +57,16 @@ class WordProgress(models.Model):
 
 
 class User(AbstractUser):
-    current_level = models.ForeignKey('doslos.Level', blank=True, null=True)
+    current_level = models.ForeignKey('doslos.Level', default=lambda: Level.objects.get_or_create(parent=None)[0])
 
     def get_available_levels(self):
-        raise NotImplementedError('Not implemented')
+        level = self.current_level
+        levels = [level, ]
+        while level.parent is not None:
+            level = level.parent
+            levels.append(level)
+        return levels
 
     def complete_level(self, level):
-        raise NotImplementedError('Not implemented')
+        if level == self.current_level:
+            self.current_level = Level.objects.get(parent=level)
