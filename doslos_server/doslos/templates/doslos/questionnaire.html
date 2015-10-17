@@ -22,16 +22,22 @@
     <form method="post" action="{% url 'post_questionnaire' level_id=level_id %}">
         {% csrf_token %}
         <input type="hidden" value="{{ word.pk }}" name="word_id"/>
+
         {% for answer_word in answers %}
-
-            <div class="radio">
-                <label for="word_{{ answer_word.pk }}">
-                    <input type="radio" name="answer" id="word_{{ answer_word.pk }}" value="{{ answer_word.value_de }}">
-                    {{ answer_word.value_de }}
-                </label>
+            <div class=" col-sm-3">
+                <div class="radio">
+                    <label for="word_{{ answer_word.pk }}">
+                        <input type="radio" name="answer" id="word_{{ answer_word.pk }}"
+                               value="{{ answer_word.value_de }}">
+                        {{ answer_word.value_de }}
+                    </label>
+                </div>
             </div>
-
         {% endfor %}
-        <input type="submit" value="{% trans 'Submit' %}"/>
+
+        <div class="col-sm-offset-4 col-sm-4">
+            <input class="btn btn-success btn-block" type="submit" value="{% trans 'Submit' %}"/>
+        </div>
+
     </form>
 {% endblock %}
