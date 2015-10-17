@@ -96,6 +96,13 @@ class UserTest(TestCase):
         user.complete_level(first_level)
         self.assertEqual(third_level, user.current_level)
 
+    def test_complete_last_level(self):
+        first_level = G(Level)
+        second_level = G(Level, parent=first_level)
+        user = G(User, current_level=second_level)
+        user.complete_level(second_level)
+        self.assertEqual(second_level, user.current_level)
+
 
 class LevelTest(TestCase):
     user = None

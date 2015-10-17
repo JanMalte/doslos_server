@@ -112,5 +112,8 @@ class User(AbstractUser):
 
     def complete_level(self, level):
         if level == self.current_level:
-            self.current_level = Level.objects.get(parent=level)
-            self.save()
+            try:
+                self.current_level = Level.objects.get(parent=level)
+                self.save()
+            except Level.DoesNotExist: # ignore the completion of the last level
+                pass
