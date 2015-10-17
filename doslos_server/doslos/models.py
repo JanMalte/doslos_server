@@ -113,3 +113,4 @@ class User(AbstractUser):
     def complete_level(self, level):
         if level == self.current_level:
             self.current_level = Level.objects.get(parent=level)
+            self.save()

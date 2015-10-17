@@ -10,9 +10,11 @@
     <p><strong>{{ word.value_en }}</strong></p>
 
 <form method="post" action="{% url 'post_questionnaire' level_id=level_id %}">
+    {% csrf_token %}
     <input type="hidden" value="{{ word.pk }}" name="word_id" />
     {% for answer_word in answers %}
-    <input value="{{ answer_word.value_de }}" type="radio" name="answer" /> {{ answer_word.value_de }} <br />
+    <input id="word_{{ answer_word.pk }}" value="{{ answer_word.value_de }}" type="radio" name="answer" />
+        <label for="word_{{ answer_word.pk }}">{{ answer_word.value_de }}</label><br />
     {% endfor %}
     <input type="submit" value="{% trans 'Submit' %}" />
 </form>

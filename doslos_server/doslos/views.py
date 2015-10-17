@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 
 from doslos.models import Word, Level
@@ -11,7 +12,7 @@ def select_level(request):
 def questionnaire(request, level_id):
     level = Level.objects.get(pk=level_id)
     word = level.get_random_word(request.user)
-    answers = level.get_answers(word, request.user)
+    answers = level.get_possible_answers(word, request.user)
     context = {
         'level_id': level_id,
         'word': word,
@@ -35,6 +36,6 @@ def post_questionnaire(request, level_id):
         request.user.complete_level(level)
         level_right_answer_counter = 0
         request.session['level_right_answer_counter'] = level_right_answer_counter
-        return redirect('select_level')
+        return redirect(reverse('select_level'))
     request.session['level_right_answer_counter'] = level_right_answer_counter
-    return redirect('questionaire')
+    return redirect(reverse('questionnaire', kwargs={'level_id': int(level_id)}))
