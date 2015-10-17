@@ -35,6 +35,13 @@ class Level(models.Model):
     def __str__(self):
         return self.name
 
+    def get_word_list(self, user):
+        words = []
+        for word in self.word_set.all():
+            for x in range(0, word.get_progress_for_user(user).category.probability):
+                words.append(word)
+        return words
+
     def get_random_word(self, user):
         raise NotImplementedError('Not implemented')
 

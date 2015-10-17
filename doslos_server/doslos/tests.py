@@ -93,3 +93,64 @@ class UserTest(TestCase):
         user = G(User, current_level=third_level)
         user.complete_level(first_level)
         self.assertEqual(third_level, user.current_level)
+
+
+class LevelTest(TestCase):
+    user = None
+
+    @property
+    def level(self):
+        return self.user.current_level
+
+    def setUp(self):
+        self.user = G(User, current_level=G(Level))
+
+    def test_get_word_list_no_words(self):
+        G(Category, parent=None, probability=1)
+        self.assertEqual(0, len(self.level.get_word_list(self.user)))
+
+    def test_get_word_list_only_one_word(self):
+        G(Category, parent=None, probability=1)
+        word = G(Word, level=self.user.current_level)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(word, word_list)
+        self.assertEqual(1, len(word_list))
+
+    def test_get_word_list_only_one_word_with_probability(self):
+        G(Category, parent=None, probability=10)
+        word = G(Word, level=self.user.current_level)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(word, word_list)
+        self.assertEqual(10, len(word_list))
+
+    def test_get_word_list_two_words(self):
+        G(Category, parent=None, probability=1)
+        first_word = G(Word, level=self.user.current_level)
+        second_word = G(Word, level=self.user.current_level)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(first_word, word_list)
+        self.assertIn(second_word, word_list)
+        self.assertEqual(2, len(word_list))
+
+    def test_get_word_list_only_one_word_with_probability(self):
+        G(Category, parent=None, probability=10)
+        first_word = G(Word, level=self.user.current_level)
+        second_word = G(Word, level=self.user.current_level)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(first_word, word_list)
+        self.assertIn(second_word, word_list)
+        self.assertEqual(20, len(word_list))
+
+    def test_get_word_list_only_one_word_with_different_probabilities(self):
+        first_category = G(Category, parent=None, probability=10)
+        second_category = G(Category, parent=first_category, probability=5)
+        first_word = G(Word, level=self.user.current_level)
+        second_word = G(Word, level=self.user.current_level)
+        G(WordProgress, user=self.user, word=first_word, category=first_category)
+        G(WordProgress, user=self.user, word=second_word, category=second_category)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(first_word, word_list)
+        self.assertIn(second_word, word_list)
+        self.assertEqual(15, len(word_list))
+        self.assertEqual(10, word_list.count(first_word))
+        self.assertEqual(5, word_list.count(second_word))
