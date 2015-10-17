@@ -1,22 +1,37 @@
+{% extends 'doslos/layout.html' %}
 {% load i18n %}
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>{% blocktrans with level_name=level.name %}Level "{{ level_name }}"{% endblocktrans %}</title>
-</head>
-<body>
-    <h1>{% trans 'Choose the right translation for the word, shown below' %}</h1>
-    <p><strong>{{ word.value_en }}</strong></p>
 
-<form method="post" action="{% url 'post_questionnaire' level_id=level_id %}">
-    {% csrf_token %}
-    <input type="hidden" value="{{ word.pk }}" name="word_id" />
-    {% for answer_word in answers %}
-    <input id="word_{{ answer_word.pk }}" value="{{ answer_word.value_de }}" type="radio" name="answer" />
-        <label for="word_{{ answer_word.pk }}">{{ answer_word.value_de }}</label><br />
-    {% endfor %}
-    <input type="submit" value="{% trans 'Submit' %}" />
-</form>
-</body>
-</html>
+{% block title %}{% blocktrans with level_name=level.name %}Level "{{ level_name }}"{% endblocktrans %}{% endblock %}
+
+{% block content %}
+
+    <h2>{% blocktrans with level_name=level.name %}Level "{{ level_name }}"{% endblocktrans %}</h2>
+
+    <div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="{{ completed_percentage }}" aria-valuemin="0"
+             aria-valuemax="100" style="width: {{ completed_percentage }}%">
+            {{ completed_percentage }}%
+        </div>
+    </div>
+
+    <p>{% trans 'Choose the right translation for the word, shown below' %}</p>
+    <div class="well">
+        <em>{{ word.value_en }}</em>
+    </div>
+
+    <form method="post" action="{% url 'post_questionnaire' level_id=level_id %}">
+        {% csrf_token %}
+        <input type="hidden" value="{{ word.pk }}" name="word_id"/>
+        {% for answer_word in answers %}
+
+            <div class="radio">
+                <label for="word_{{ answer_word.pk }}">
+                    <input type="radio" name="answer" id="word_{{ answer_word.pk }}" value="{{ answer_word.value_de }}">
+                    {{ answer_word.value_de }}
+                </label>
+            </div>
+
+        {% endfor %}
+        <input type="submit" value="{% trans 'Submit' %}"/>
+    </form>
+{% endblock %}

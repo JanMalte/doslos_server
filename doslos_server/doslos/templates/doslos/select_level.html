@@ -1,17 +1,15 @@
+{% extends 'doslos/layout.html' %}
 {% load i18n %}
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>{% trans 'Select level' %}</title>
-</head>
-<body>
+
+{% block title %}{% trans 'Select level' %}{% endblock %}
+
+{% block content %}
     <h1>{% trans 'Select level' %}</h1>
     <ul>
-    {% for level in available_levels %}
-        <li><a href="{% url 'questionnaire' level_id=level.pk %}">{{ level.name }}</a><br />
-        <small>{{ level.description }}</small></li>
-    {% endfor %}
+        {% for level in available_levels %}
+            <li><a href="{% url 'questionnaire' level_id=level.pk %}">{{ level.name }}</a><br/>
+                <small>{{ level.description }}</small>
+            </li>
+        {% endfor %}
     </ul>
-</body>
-</html>
+{% endblock %}
