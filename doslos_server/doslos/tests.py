@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django_dynamic_fixture import G
 
@@ -154,3 +156,67 @@ class LevelTest(TestCase):
         self.assertEqual(15, len(word_list))
         self.assertEqual(10, word_list.count(first_word))
         self.assertEqual(5, word_list.count(second_word))
+
+    def test_get_word_list_only_one_word_with_different_probabilities_in_different_levels_second_not_reached(self):
+        first_level = self.level
+        second_level = G(Level)
+        first_category = G(Category, parent=None, probability=10)
+        second_category = G(Category, parent=first_category, probability=5)
+        first_word = G(Word, level=first_level)
+        second_word = G(Word, level=second_level)
+        G(WordProgress, user=self.user, word=first_word, category=first_category)
+        G(WordProgress, user=self.user, word=second_word, category=second_category)
+        word_list = self.level.get_word_list(self.user)
+        self.assertIn(first_word, word_list)
+        self.assertNotIn(second_word, word_list)
+        self.assertEqual(10, len(word_list))
+        self.assertEqual(10, word_list.count(first_word))
+
+    def test_get_word_list_only_one_word_with_different_probabilities_in_different_levels_second_reached(self):
+        first_level = self.level
+        second_level = G(Level, parent=first_level)
+        first_category = G(Category, parent=None, probability=10)
+        second_category = G(Category, parent=first_category, probability=5)
+        first_word = G(Word, level=first_level)
+        second_word = G(Word, level=second_level)
+        G(WordProgress, user=self.user, word=first_word, category=first_category)
+        G(WordProgress, user=self.user, word=second_word, category=second_category)
+        self.user.current_level = second_level
+        self.user.save()
+        word_list = second_level.get_word_list(self.user)
+        self.assertIn(first_word, word_list)
+        self.assertIn(second_word, word_list)
+        self.assertEqual(15, len(word_list))
+        self.assertEqual(10, word_list.count(first_word))
+        self.assertEqual(5, word_list.count(second_word))
+
+
+@patch('random.randint', return_value=2)
+class GetRandomWordTest(TestCase):
+    def test_get_random_word(self, mocked_randint):
+        from .models import Level as PatchedLevel
+
+        expected_word = G(Word)
+
+        def get_word_list(user):
+            return [G(Word), G(Word), expected_word, G(Word), G(Word)]
+
+        level = PatchedLevel()
+        level.get_word_list = get_word_list
+        word = level.get_random_word(User())
+        self.assertEqual(expected_word, word)
+        mocked_randint.assert_called_with(0, 4)
+
+
+class GetPossibleAnswersTest(TestCase):
+    def test_get_possible_answers(self):
+        level = G(Level, parent=None)
+        word = G(Word, level=level)
+        word_list = [G(Word, level=level), G(Word, level=level), G(Word, level=level), word]
+
+        def get_word_list(user=None):
+            return word_list
+
+        level.get_word_list = get_word_list
+        answers = level.get_possible_answers(word, User())
+        self.assertSetEqual(set(get_word_list()), set(answers))

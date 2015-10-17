@@ -1,3 +1,6 @@
+import random
+from random import shuffle
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -16,7 +19,7 @@ class Word(models.Model):
         progress = self.get_progress_for_user(user)
         progress.right_answer_counter += 1
         if progress.category.next_category_threshold and (
-                progress.right_answer_counter >= progress.category.next_category_threshold):
+                    progress.right_answer_counter >= progress.category.next_category_threshold):
             progress.category = Category.objects.get(parent=progress.category)
         progress.save()
 
@@ -36,17 +39,32 @@ class Level(models.Model):
         return self.name
 
     def get_word_list(self, user):
-        words = []
-        for word in self.word_set.all():
-            for x in range(0, word.get_progress_for_user(user).category.probability):
-                words.append(word)
+        def get_words_for_level(level):
+            words = []
+            for word in level.word_set.all():
+                for x in range(0, word.get_progress_for_user(user).category.probability):
+                    words.append(word)
+            return words
+
+        words = get_words_for_level(self)
+        level = self
+        while level.parent is not None:
+            level = level.parent
+            words.extend(get_words_for_level(level))
         return words
 
     def get_random_word(self, user):
-        raise NotImplementedError('Not implemented')
+        word_list = self.get_word_list(user)
+        return word_list[random.randint(0, len(word_list) - 1)]
 
     def get_possible_answers(self, word, user):
-        raise NotImplementedError('Not implemented')
+        answers = [word, ]
+        while len(answers) < 4:
+            wrong_word = self.get_random_word(user)
+            if wrong_word not in answers:
+                answers.append(wrong_word)
+        shuffle(answers)
+        return answers
 
 
 def get_default_level_id():
