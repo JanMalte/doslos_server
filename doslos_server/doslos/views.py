@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 
-from doslos.models import Word
+from doslos.models import Word, Level
 
 
 def select_level(request):
@@ -9,8 +9,9 @@ def select_level(request):
 
 
 def questionnaire(request, level_id):
-    word = ''  # FIXME implement
-    answers = []  # FIXME implement
+    level = Level.objects.get(pk=level_id)
+    word = level.get_random_word(request.user)
+    answers = level.get_answers(word, request.user)
     context = {
         'level_id': level_id,
         'word': word,
@@ -21,6 +22,7 @@ def questionnaire(request, level_id):
 
 
 def post_questionnaire(request, level_id):
+    level = Level.objects.get(pk=level_id)
     level_right_answer_counter = request.session.get('level_right_answer_counter', 0)
     word = Word.objects.get(pk=request.POST['word_id'])
     if word.value_de == request.POST['answer']:
@@ -30,7 +32,7 @@ def post_questionnaire(request, level_id):
         level_right_answer_counter = 0
         word.reset_right_answer_counter(request.user)
     if level_right_answer_counter >= 10:
-        request.user.complete_level(level_id)
+        request.user.complete_level(level)
         level_right_answer_counter = 0
         request.session['level_right_answer_counter'] = level_right_answer_counter
         return redirect('select_level')
