@@ -1,0 +1,20 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{% blocktrans with level_name=level.name %}Level "{{ level_name }}"{% endblocktrans %}</title>
+</head>
+<body>
+    <h1>{% trans 'Choose the right translation for the word, shown below' %}</h1>
+    <p><strong>{{ word.value_en }}</strong></p>
+
+<form method="post" action="{% url 'post_questionnaire' level_id=level_id %}">
+    <input type="hidden" value="{{ word.pk }}" name="word_id" />
+    {% for answer_word in answers %}
+    <input value="{{ answer_word.value_de }}" type="radio" name="answer" /> {{ answer_word.value_de }} <br />
+    {% endfor %}
+    <input type="submit" value="{% trans 'Submit' %}" />
+</form>
+</body>
+</html>
