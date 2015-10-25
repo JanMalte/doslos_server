@@ -72,7 +72,7 @@ def get_default_level_id():
     try:
         return Level.objects.get_or_create(parent=None)[0].pk
     except Level.MultipleObjectsReturned:
-        return Level.objects.filter(parent=None)first().pk
+        return Level.objects.filter(parent=None).first().pk
 
 
 class Category(models.Model):
@@ -89,7 +89,7 @@ def get_default_category_id():
     try:
         return Category.objects.get_or_create(parent=None)[0].pk
     except Category.MultipleObjectsReturned:
-        return Category.objects.filter(parent=None)first().pk
+        return Category.objects.filter(parent=None).first().pk
 
 
 class WordProgress(models.Model):
