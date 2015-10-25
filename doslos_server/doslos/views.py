@@ -1,6 +1,7 @@
 from django.conf import settings
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 from django.utils.translation import ugettext as _
@@ -8,11 +9,13 @@ from django.utils.translation import ugettext as _
 from doslos.models import Word, Level
 
 
+@login_required
 def select_level(request):
     return render(request, 'doslos/select_level.html',
                   context={'available_levels': request.user.get_available_levels()})
 
 
+@login_required
 def questionnaire(request, level_id):
     level = Level.objects.get(pk=level_id)
     word = level.get_random_word(request.user)
@@ -30,6 +33,7 @@ def questionnaire(request, level_id):
     return render(request, 'doslos/questionnaire.html', context=context)
 
 
+@login_required
 def post_questionnaire(request, level_id):
     level = Level.objects.get(pk=level_id)
     level_right_answer_counter = request.session.get('level_right_answer_counter', 0)
