@@ -67,12 +67,19 @@ class Level(models.Model):
         shuffle(answers)
         return answers
 
+    def get_next_level(self):
+        return Level.objects.get(parent=self)
+
+
+def get_default_level():
+    try:
+        return Level.objects.get_or_create(parent=None)[0]
+    except Level.MultipleObjectsReturned:
+        return Level.objects.filter(parent=None).first()
+
 
 def get_default_level_id():
-    try:
-        return Level.objects.get_or_create(parent=None)[0].pk
-    except Level.MultipleObjectsReturned:
-        return Level.objects.filter(parent=None).first().pk
+    get_default_level().pk
 
 
 class Category(models.Model):
@@ -119,7 +126,7 @@ class User(AbstractUser):
     def complete_level(self, level):
         if level == self.current_level:
             try:
-                self.current_level = Level.objects.get(parent=level)
+                self.current_level = level.get_next_level()
                 self.save()
             except Level.DoesNotExist: # ignore the completion of the last level
                 pass

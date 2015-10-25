@@ -1,9 +1,11 @@
 from unittest.mock import patch
+from _pyio import StringIO
 
 from django.test import TestCase
 from django_dynamic_fixture import G
 
 from doslos.models import Word, User, WordProgress, Category, Level
+from doslos.import_data  import import_words_from_csv
 
 """
 FIXME default values for foreign keys do not work with dynamic fixtures
@@ -239,3 +241,84 @@ class GetPossibleAnswersTest(TestCase):
         level.get_word_list = get_word_list
         answers = level.get_possible_answers(word, User())
         self.assertSetEqual(set(get_word_list()), set(answers))
+
+
+class ImportTest(TestCase):
+
+    def test_first_line_is_ignored(self):
+        words = import_words_from_csv(StringIO(';a;b\nignored;original;translation'))
+        self.assertEqual(1, len(words))
+
+    def test_one_word(self):
+        words = import_words_from_csv(StringIO(';a;b\nignored;germanword;englishword'))
+        self.assertEqual('germanword', words[0].value_de)
+        self.assertEqual('englishword', words[0].value_en, )
+
+    def test_another_word(self):
+        words = import_words_from_csv(StringIO(';a;b\nignored;grün;green'))
+        self.assertEqual('grün', words[0].value_de)
+        self.assertEqual('green', words[0].value_en)
+
+    def test_two_words(self):
+        words = import_words_from_csv(StringIO(';a;b\nignored;grün;green\nignored;Auto;car'))
+        self.assertEqual('grün', words[0].value_de)
+        self.assertEqual('green', words[0].value_en)
+        self.assertEqual('Auto', words[1].value_de)
+        self.assertEqual('car', words[1].value_en)
+
+    def test_word_is_saved_in_db(self):
+        import_words_from_csv(StringIO(';a;b\nignored;grün;green\nignored;Auto;car'))
+        words = Word.objects.all()
+        self.assertEqual('grün', words[0].value_de)
+        self.assertEqual('green', words[0].value_en)
+        self.assertEqual('Auto', words[1].value_de)
+        self.assertEqual('car', words[1].value_en)
+
+    def test_word_are_divided_into_levels(self):
+        level1 = G(Level, parent=None)
+        level2 = G(Level, parent=level1)
+        level3 = G(Level, parent=level2)
+        csv = ';;'
+
+        for i in range(0,21):
+            csv += '\nignored;w' + str(i) + ';t' + str(i)
+        import_words_from_csv(StringIO(csv))
+        words = Word.objects.all()
+        for i in range(1,9):
+            self.assertEqual(words[i].level, level1)
+            self.assertEqual('w' + str(i), words[i].value_de)
+            self.assertEqual('t' + str(i), words[i].value_en)
+        for i in range(10,19):
+            self.assertEqual(words[i].level, level2)
+            self.assertEqual('w' + str(i), words[i].value_de)
+            self.assertEqual('t' + str(i), words[i].value_en)
+        for i in range(20,21):
+            self.assertEqual(words[i].level, level3)
+            self.assertEqual('w' + str(i), words[i].value_de)
+            self.assertEqual('t' + str(i), words[i].value_en)
+
+    def test_existing_word_is_removed(self):
+        old_word = G(Word, value_de='alt', value_en='old')
+        old_word_id = old_word.pk
+        import_words_from_csv(StringIO(';;\nignored;grün;green'))
+        self.assertEqual(0, len(Word.objects.filter(pk=old_word_id)))
+
+    def test_existing_word_is_updated_id_german_is_the_same(self):
+        old_word = G(Word, value_de='alt', value_en='wrongenglish')
+        old_word_id = old_word.pk
+        import_words_from_csv(StringIO(';;\nignored;alt;old'))
+        new_word = Word.objects.get(pk=old_word_id)
+        self.assertEqual(old_word_id, new_word.pk)
+        self.assertEqual('alt', new_word.value_de)
+        self.assertEqual('old', new_word.value_en)
+        self.assertEqual(1, len(Word.objects.all()))
+
+    def test_existing_word_change_level(self):
+        level1 = G(Level, parent=None)
+        level2 = G(Level, parent=level1)
+        level3 = G(Level, parent=level2)
+        old_word = G(Word, value_de='alt', value_en='wrongenglish', level = level2)
+        old_word_id = old_word.pk
+        import_words_from_csv(StringIO(';;\nignored;alt;old'))
+        new_word = Word.objects.get(pk=old_word_id)
+        self.assertEqual(level1, new_word.level)
